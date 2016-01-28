@@ -1,4 +1,14 @@
 version: 2
+
+volumes:
+  myvolume:
+
+networks:
+  front:
+    driver: bridge
+  back:
+    driver: bridge
+
 services:
   voting-app:
     build: ./voting-app/.
@@ -6,23 +16,27 @@ services:
       - ./voting-app:/app
     ports:
       - "5000:80"
-    links:
-      - redis
+    networks:
+     - front
+     - back
 
   redis:
     image: redis
     ports: ["6379"]
+    networks:
+      - back
 
   worker:
     build: ./worker
-    links:
-      - db
-      - redis
+    networks:
+      - back
 
   db:
     image: postgres:9.4
     volumes:
       - "myvolume:/var/lib/postgresql/data"
+    networks:
+      - back
 
   result-app:
     build: ./result-app/.
@@ -30,5 +44,6 @@ services:
       - ./result-app:/app
     ports:
       - "5001:80"
-    links:
-      - db
+    networks:
+      - front
+      - back
